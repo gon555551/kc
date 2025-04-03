@@ -328,6 +328,7 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
                     draggable=False,
                     resizable=False,
                     easy_drag=False,
+                    on_top=True,
                 )
                 threading.Timer(10, lambda w=notif_window: w.destroy()).start()
 
