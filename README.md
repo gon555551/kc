@@ -10,12 +10,12 @@
 - Taskbar icon
     - Minimize to taskbar
 - Scroll-to-load
+- Link notifications
 
 ## Upcoming features:
 - Settings menu
     - Colour customization
 - File download
-- Link notifications
 - Advanced search
     - Post search
     - Tag search

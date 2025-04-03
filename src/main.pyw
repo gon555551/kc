@@ -1,6 +1,5 @@
 import threading, webview, queue
 from time import sleep
-from notifypy import Notify
 import sqlite3 as sql
 from api import *
 from constants import *
@@ -11,11 +10,18 @@ import pystray
 from PIL import Image
 
 
+# Scroll handler
+class JSAPI:
+    def __init__(self, root: queue.SimpleQueue):
+        self.root = root
+
+    def scroll_handler(self):
+        root.put(Event("SCROLLED"))
+
+
 # Lookup logic
 def lookup_handler(
-    creator: Creator,
-    kill_switch: queue.SimpleQueue,
-    notification: Notify,
+    creator: Creator, kill_switch: queue.SimpleQueue, root: queue.SimpleQueue()
 ) -> None:
     con = sql.connect(DATABASE)
     while True:
@@ -32,16 +38,16 @@ def lookup_handler(
             creator.latest = latest
             with con:
                 set_latest(con, creator)
-            notification.title = f"New post from {creator.name}!"
-            notification.message = latest["title"]
-            notification.send()
+
+            root.put(Event("NOTIFICATION", [creator, latest]))
+
         sleep(get_timer(con))
 
 
 # Broker handler
 def broker_handler(
     broker: queue.SimpleQueue,
-    notification: Notify,
+    root: queue.SimpleQueue,
 ) -> None:
     active_threads = {}
     con = sql.connect(DATABASE)
@@ -68,7 +74,7 @@ def broker_handler(
                 threading.Thread(
                     daemon=True,
                     target=lookup_handler,
-                    args=[creator_obj, kill_switch, notification],
+                    args=[creator_obj, kill_switch, root],
                 ),
                 kill_switch,
             )
@@ -133,14 +139,17 @@ def settings_handler(root: queue.SimpleQueue) -> Callable:
 
     return logic
 
+
 # Icon handler
 def icon_handler(icon: pystray.Icon) -> None:
     icon.run()
+
 
 # Tray handler
 def tray_click_handler(root: queue.SimpleQueue) -> Callable:
     def logic(icon: pystray.Icon, item: pystray.MenuItem) -> None:
         root.put(Event("REOPEN"))
+
     return logic
 
 
@@ -149,8 +158,8 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
     # Thread queues
     broker = queue.SimpleQueue()  # Spawn and kill lookup threads
     debounce = queue.SimpleQueue()  # Used for debouncing input
-    page = queue.SimpleQueue() # Page counter
-    page.put(0) # Starts at 0
+    page = queue.SimpleQueue()  # Page counter
+    page.put(0)  # Starts at 0
 
     # Input elements
     input_field = window.dom.get_element("#input_field")  # Primary input field
@@ -166,26 +175,20 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
             reverse=True,
         )
     ]
-    notification = Notify()  # Notification object
-    notification.icon = NOTIFICATION_ICON # Notification icon setup
-    if not os.path.exists(PATH + "/data"): # Check data folder
+    if not os.path.exists(PATH + "/data"):  # Check data folder
         os.makedirs(PATH + "/data")
     con = sql.connect(DATABASE)  # Database connection
     ctemplate = window.dom.get_element("#ctemplate")  # Creator section template
     favourites = False  # Favourites mode toggle
     settings = False  # Settings mode toggle
-    tray_icon = pystray.Icon( # Set up tray icon
-        "KC", 
-        icon=Image.open(ICON), 
+    tray_icon = pystray.Icon(  # Set up tray icon
+        "KC",
+        icon=Image.open(ICON),
         menu=pystray.Menu(
-            pystray.MenuItem(
-                'Clickable',
-                tray_click_handler(root),
-                default=True
-            )
-        )
+            pystray.MenuItem("Clickable", tray_click_handler(root), default=True)
+        ),
     )
-    last_search = "" # Last search holder
+    last_search = ""  # Last search holder
 
     # Thread handlers
     threading.Thread(  # Broker handler thread
@@ -193,14 +196,10 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
         target=broker_handler,
         args=[
             broker,
-            notification,
+            root,
         ],
     ).start()
-    threading.Thread(
-        daemon=True,
-        target=icon_handler,
-        args=[tray_icon]
-    ).start()
+    threading.Thread(daemon=True, target=icon_handler, args=[tray_icon]).start()
 
     # Input handlers
     window.events.closed += closed_handler(root)
@@ -237,7 +236,7 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
         for c in [
             creator for creator in csource if search.lower() in creator.name.lower()
         ][
-            p*50:(p+1)*50
+            p * 50 : (p + 1) * 50
         ]:  # 50 is the Kemono page size
             t = ctemplate.copy()
             del t.attributes["hidden"]
@@ -310,17 +309,37 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
                 window.restore()
                 window.show()
             case scroll if scroll.type == "SCROLLED":
-                page.put(page.get()+1)
+                page.put(page.get() + 1)
                 generate_ui(last_search, False)
+            case notif if notif.type == "NOTIFICATION":
 
+                creator, latest = notif.event
 
-# Scroll handler
-class JSAPI:
-    def __init__(self, root: queue.SimpleQueue):
-        self.root = root
+                screen = webview.screens[0]
+                notif_window = webview.create_window(
+                    "Notification",
+                    PATH + "/ui/notification.html",
+                    frameless=True,
+                    transparent=True,
+                    width=500,
+                    height=100,
+                    x=screen.width - 500,
+                    y=0,
+                    draggable=False,
+                    resizable=False,
+                    easy_drag=False,
+                )
+                threading.Timer(10, lambda: notif_window.destroy()).start()
 
-    def scroll_handler(self):
-        root.put(Event("SCROLLED"))
+                close_button = notif_window.dom.get_element("#close_button")
+                close_button.events.click += lambda e: notif_window.destroy()
+                notif_window.dom.get_element("#title").text = (
+                    f"New post from {creator.name}!"
+                )
+                notif_window.dom.get_element("#message").text = latest["title"]
+                notif_window.dom.get_element("#notification_link").attributes[
+                    "href"
+                ] = f"https://kemono.su/{creator.service}/user/{creator.id}"
 
 
 # Setup and initialization
