@@ -7,13 +7,13 @@
 - Desktop notifications
 - GUI
 - Check-timing customization
+- Taskbar icon
+    - Minimize to taskbar
 
 ## Upcoming features:
 - Settings menu
     - Colour customization
 - File download
-- Taskbar icon
-    - Minimize to taskbar
 - Link notifications
 - Scroll-to-load
 - Advanced search

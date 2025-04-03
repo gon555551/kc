@@ -7,6 +7,8 @@ from constants import *
 from mem import *
 from collections.abc import Callable
 import os
+import pystray
+from PIL import Image
 
 
 # Lookup logic
@@ -131,9 +133,28 @@ def settings_handler(root: queue.SimpleQueue) -> Callable:
 
     return logic
 
+# Icon handler
+def icon_handler(icon: pystray.Icon) -> None:
+    icon.run()
+
+# Tray handler
+def tray_click_handler(root: queue.SimpleQueue) -> Callable:
+    def logic(icon: pystray.Icon, item: pystray.MenuItem) -> None:
+        root.put(Event("REOPEN"))
+    return logic
 
 # Root handler
 def root_handler(window: webview.window.Window) -> int:
+    # Thread queues
+    root = queue.SimpleQueue()  # Main
+    broker = queue.SimpleQueue()  # Spawn and kill lookup threads
+    debounce = queue.SimpleQueue()  # Used for debouncing input
+
+    # Input elements
+    input_field = window.dom.get_element("#input_field")  # Primary input field
+    fav_button = window.dom.get_element("#fav_button")  # Switch favourites button
+    settings_button = window.dom.get_element("#settings_button")  # Open settings menu
+
     # Relevant data
     clist = [
         Creator(creator["service"], creator["id"], creator["name"], 0, "{}")
@@ -152,16 +173,17 @@ def root_handler(window: webview.window.Window) -> int:
     ctemplate = window.dom.get_element("#ctemplate")  # Creator section template
     favourites = False  # Favourites mode toggle
     settings = False  # Settings mode toggle
-
-    # Thread queues
-    root = queue.SimpleQueue()  # Main
-    broker = queue.SimpleQueue()  # Spawn and kill lookup threads
-    debounce = queue.SimpleQueue()  # Used for debouncing input
-
-    # Input elements
-    input_field = window.dom.get_element("#input_field")  # Primary input field
-    fav_button = window.dom.get_element("#fav_button")  # Switch favourites button
-    settings_button = window.dom.get_element("#settings_button")  # Open settings menu
+    tray_icon = pystray.Icon( # Set up tray icon
+        "KC", 
+        icon=Image.open(ICON), 
+        menu=pystray.Menu(
+            pystray.MenuItem(
+                'Clickable',
+                tray_click_handler(root),
+                default=True
+            )
+        )
+    )
 
     # Thread handlers
     threading.Thread(  # Broker handler thread
@@ -172,9 +194,15 @@ def root_handler(window: webview.window.Window) -> int:
             notification,
         ],
     ).start()
+    threading.Thread(
+        daemon=True,
+        target=icon_handler,
+        args=[tray_icon]
+    ).start()
 
     # Input handlers
     window.events.closed += closed_handler(root)
+    window.events.minimized += lambda: window.hide()
     input_field.events.input += input_handler(root, debounce)
     fav_button.events.click += fav_handler(root)
     settings_button.events.click += settings_handler(root)
@@ -268,6 +296,9 @@ def root_handler(window: webview.window.Window) -> int:
                             set_timer(con, 1800)
                         case "h1":
                             set_timer(con, 3600)
+            case reopen if reopen.type == "REOPEN":
+                window.restore()
+                window.show()
 
 
 # Setup and initialization
