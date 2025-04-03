@@ -168,7 +168,6 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
     ]
     notification = Notify()  # Notification object
     notification.icon = NOTIFICATION_ICON # Notification icon setup
-    print(PATH)
     if not os.path.exists(PATH + "/data"): # Check data folder
         os.makedirs(PATH + "/data")
     con = sql.connect(DATABASE)  # Database connection
