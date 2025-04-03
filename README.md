@@ -30,7 +30,7 @@
 ## Modules used
 
 GUI -> pywebview, tailwindcss  
-Notification -> notify-py
+Notification -> notify-py  
 Database -> sqlite3
 
 and requests.
