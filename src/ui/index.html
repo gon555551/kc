@@ -13,7 +13,7 @@
             <button type="button" title="Toggle favourites view" id="fav_button" class="bg-kemono z-11 hover:bg-[#dc5b00] h-12 w-12 inset-0 align-middle shadow-sm shadow-kemono">⭐</button>
         </div>
 
-        <ul id="clist" class="flex-1 overflow-y-scroll space-y-4 no-scrollbar p-3">
+        <ul id="creator_list" class="flex-1 overflow-y-scroll space-y-4 no-scrollbar p-3">
             <li id="ctemplate" hidden class="flex items-center justify-between p-3 shadow-normal shadow-kemono border-1 border-kemono rounded-md">
                 <a id="link" target="_blank" href="" class="flex items-center gap-4">
                     <img id="image" src="" alt="" class="size-20 rounded-lg object-cover"/>
@@ -42,5 +42,12 @@
             <button type="button" hidden title="30 minute timer (default)" id="m30" class="z-11 h-8 w-full inset-0 align-middle border-1 hover:bg-gray-100">30 M</button>
             <button type="button" hidden title="1 hour timer" id="h1" class="z-11 h-8 w-full inset-0 align-middle border-1 hover:bg-gray-100">1 H</button>
         </div>
+
+        <script type="text/javascript">
+            document.getElementById('creator_list').addEventListener('scroll', function() {
+                if (this.scrollTop + this.clientHeight >= this.scrollHeight - 500)
+                pywebview.api.scroll_handler().then()
+            });
+        </script>
     </body>
 </html>

@@ -143,12 +143,14 @@ def tray_click_handler(root: queue.SimpleQueue) -> Callable:
         root.put(Event("REOPEN"))
     return logic
 
+
 # Root handler
-def root_handler(window: webview.window.Window) -> int:
+def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
     # Thread queues
-    root = queue.SimpleQueue()  # Main
     broker = queue.SimpleQueue()  # Spawn and kill lookup threads
     debounce = queue.SimpleQueue()  # Used for debouncing input
+    page = queue.SimpleQueue() # Page counter
+    page.put(0) # Starts at 0
 
     # Input elements
     input_field = window.dom.get_element("#input_field")  # Primary input field
@@ -184,6 +186,7 @@ def root_handler(window: webview.window.Window) -> int:
             )
         )
     )
+    last_search = "" # Last search holder
 
     # Thread handlers
     threading.Thread(  # Broker handler thread
@@ -208,12 +211,19 @@ def root_handler(window: webview.window.Window) -> int:
     settings_button.events.click += settings_handler(root)
 
     # Generate UI function
-    def generate_ui(search: str) -> None:
-        [
-            c.remove()
-            for c in ctemplate.parent.children
-            if c.attributes["id"] != ctemplate.attributes["id"]
-        ]
+    def generate_ui(search: str, reset: bool = True) -> None:
+        if reset:
+            page.get()
+            page.put(0)
+            p = 0
+            [
+                c.remove()
+                for c in ctemplate.parent.children
+                if c.attributes["id"] != ctemplate.attributes["id"]
+            ]
+        else:
+            p = page.get()
+            page.put(p)
 
         database_creators = get_database_creators(con)
 
@@ -228,7 +238,7 @@ def root_handler(window: webview.window.Window) -> int:
         for c in [
             creator for creator in csource if search.lower() in creator.name.lower()
         ][
-            :50
+            p*50:(p+1)*50
         ]:  # 50 is the Kemono page size
             t = ctemplate.copy()
             del t.attributes["hidden"]
@@ -277,6 +287,7 @@ def root_handler(window: webview.window.Window) -> int:
                 exit()
                 return 0
             case search if search.type == "SEARCH":
+                last_search = search.event
                 generate_ui(search.event)
             case fav if fav.type == "FAVOURITES":
                 favourites = not favourites
@@ -299,15 +310,30 @@ def root_handler(window: webview.window.Window) -> int:
             case reopen if reopen.type == "REOPEN":
                 window.restore()
                 window.show()
+            case scroll if scroll.type == "SCROLLED":
+                page.put(page.get()+1)
+                generate_ui(last_search, False)
+
+
+# Scroll handler
+class JSAPI:
+    def __init__(self, root: queue.SimpleQueue):
+        self.root = root
+
+    def scroll_handler(self):
+        root.put(Event("SCROLLED"))
 
 
 # Setup and initialization
 if __name__ == "__main__":
+    root = queue.SimpleQueue()
+    jsapi = JSAPI(root)
     window = webview.create_window(
         "KC",
         UI,
         text_select=True,
         resizable=False,
         width=400,
+        js_api=jsapi,
     )
-    webview.start(root_handler, args=[window], gui="qt", icon=ICON)
+    webview.start(root_handler, args=[window, root], gui="qt", icon=ICON)

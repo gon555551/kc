@@ -9,13 +9,13 @@
 - Check-timing customization
 - Taskbar icon
     - Minimize to taskbar
+- Scroll-to-load
 
 ## Upcoming features:
 - Settings menu
     - Colour customization
 - File download
 - Link notifications
-- Scroll-to-load
 - Advanced search
     - Post search
     - Tag search
