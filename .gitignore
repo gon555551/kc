@@ -1,4 +1,4 @@
-/data/*
+data
 test.*
 .venv
 node_modules

@@ -145,8 +145,9 @@ def root_handler(window: webview.window.Window) -> int:
     ]
     notification = Notify()  # Notification object
     notification.icon = NOTIFICATION_ICON # Notification icon setup
-    if not os.path.exists("data"): # Check data folder
-        os.makedirs("data")
+    print(PATH)
+    if not os.path.exists(PATH + "/data"): # Check data folder
+        os.makedirs(PATH + "/data")
     con = sql.connect(DATABASE)  # Database connection
     ctemplate = window.dom.get_element("#ctemplate")  # Creator section template
     favourites = False  # Favourites mode toggle

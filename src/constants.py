@@ -8,7 +8,7 @@ NAME: str = "KC"
 UI: str = PATH + "/ui/index.html"
 ICON: str = PATH + "/ui/kemono.png"
 NOTIFICATION_ICON: str = PATH + "/../src/ui/kemono.png"
-DATABASE: str = "data/kc.db"
+DATABASE: str = PATH + "/data/kc.db"
 TIMER: int = 1800  # 1800 seconds => 30 minutes
 
 
