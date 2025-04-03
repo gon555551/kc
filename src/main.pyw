@@ -8,6 +8,7 @@ from collections.abc import Callable
 import os
 import pystray
 from PIL import Image
+import chime
 
 
 # Scroll handler
@@ -312,13 +313,12 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
                 page.put(page.get() + 1)
                 generate_ui(last_search, False)
             case notif if notif.type == "NOTIFICATION":
-
                 creator, latest = notif.event
 
                 screen = webview.screens[0]
                 notif_window = webview.create_window(
                     "Notification",
-                    PATH + "/ui/notification.html",
+                    url=PATH + "/ui/notification.html",
                     frameless=True,
                     transparent=True,
                     width=500,
@@ -329,10 +329,10 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
                     resizable=False,
                     easy_drag=False,
                 )
-                threading.Timer(10, lambda: notif_window.destroy()).start()
+                threading.Timer(10, lambda w=notif_window: w.destroy()).start()
 
                 close_button = notif_window.dom.get_element("#close_button")
-                close_button.events.click += lambda e: notif_window.destroy()
+                close_button.events.click += lambda e, w=notif_window: w.destroy()
                 notif_window.dom.get_element("#title").text = (
                     f"New post from {creator.name}!"
                 )
@@ -340,6 +340,11 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
                 notif_window.dom.get_element("#notification_link").attributes[
                     "href"
                 ] = f"https://kemono.su/{creator.service}/user/{creator.id}"
+                notif_window.dom.get_element(
+                    "#notification_link"
+                ).events.click += lambda e, w=notif_window: [sleep(0.1), w.destroy()]
+
+                chime.info()
 
 
 # Setup and initialization
