@@ -7,18 +7,19 @@
     </head>
 
     <body class="h-screen flex flex-col max-w-full">
+
         <div class="flex items-center">
             <input id="input_field" class="flex-grow inset-0 p-2.25 z-10 max-w-full bg-transparent placeholder:text-slate-400 text-slate-700 border text-lg border-slate-200 transition duration-300 ease focus:outline-none focus:border-kemono hover:border-slate-300 shadow-sm shadow-kemono focus:shadow" placeholder="Search creator...">
-            <button type="button" id="fav_button" class="bg-kemono z-11 hover:bg-[#dc5b00] h-12 w-12 inset-0 align-middle shadow-sm shadow-kemono">⭐</button>
+            <button type="button" title="Toggle favourites view" id="fav_button" class="bg-kemono z-11 hover:bg-[#dc5b00] h-12 w-12 inset-0 align-middle shadow-sm shadow-kemono">⭐</button>
         </div>
 
-        <ul id="clist" class="flex-1 overflow-y-scroll space-y-4 no-scrollbar p-3">    
+        <ul id="clist" class="flex-1 overflow-y-scroll space-y-4 no-scrollbar p-3">
             <li id="ctemplate" hidden class="flex items-center justify-between p-3 shadow-normal shadow-kemono border-1 border-kemono rounded-md">
                 <a id="link" target="_blank" href="" class="flex items-center gap-4">
                     <img id="image" src="" alt="" class="size-20 rounded-lg object-cover"/>
                     <div class="self-start">
-                        <h3 id="name" class="text-lg/tight font-medium text-gray-900 dark:text-neutral-100"></h3>
-                        <p id="service" class="mt-0.5 text-gray-700 dark:text-neutral-200"></p>
+                        <h3 id="name" class="text-lg/tight font-medium text-gray-900"></h3>
+                        <p id="service" class="mt-0.5 text-gray-700"></p>
                     </div>
                 </a>
                 <label class="switch">
@@ -26,15 +27,20 @@
                     <span class="slider round"></span>
                 </label>
             </li>
-            
+
             <div role="status" class="flex items-center justify-center h-full">
-                <svg aria-hidden="true" class="w-8 h-8 self-center align-middle text-gray-200 animate-spin dark:text-gray-600 fill-kemono" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg aria-hidden="true" class="w-8 h-8 self-center align-middle text-gray-200 animate-spin fill-kemono" viewbox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
                     <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
                 </svg>
                 <span class="sr-only">Loading...</span>
             </div>
-
         </ul>
+        <div>
+            <button type="button" title="Toggle settigs view" id="settings_button" class="bg-kemono z-11 hover:bg-[#dc5b00] h-10 w-full inset-0 align-middle shadow-sm shadow-kemono">️⚙</button>
+            <button type="button" hidden title="30 second timer" id="s30" class="z-11 h-8 w-full inset-0 align-middle border-1 hover:bg-gray-100">30 S</button>
+            <button type="button" hidden title="30 minute timer (default)" id="m30" class="z-11 h-8 w-full inset-0 align-middle border-1 hover:bg-gray-100">30 M</button>
+            <button type="button" hidden title="1 hour timer" id="h1" class="z-11 h-8 w-full inset-0 align-middle border-1 hover:bg-gray-100">1 H</button>
+        </div>
     </body>
 </html>

@@ -31,5 +31,6 @@
 
 GUI -> pywebview, tailwindcss  
 Notification -> notify-py
+Database -> sqlite3
 
 and requests.

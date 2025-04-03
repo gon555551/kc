@@ -142,6 +142,12 @@ def get_timer(con: sql.Connection) -> int:
         ]
 
 
+# Set timer
+def set_timer(con: sql.Connection, time: int) -> None:
+    with con:
+        con.execute("UPDATE timer SET seconds = ?", (time,))
+
+
 # Toggle searching in database
 def toggle_searching(con: sql.Connection, creator: Creator) -> None:
     with con:
@@ -225,6 +231,7 @@ def broker_handler(
         creator_dict = creator_from_dict(
             get_creator_profile(kemono, service, creator_id), {}
         )
+
         if creator_dict.string() not in [
             creator.string() for creator in get_database_creators(con)
         ]:
@@ -297,6 +304,14 @@ def toggle_handler(root: queue.SimpleQueue) -> Callable:
     return logic
 
 
+# Settings handler
+def settings_handler(root: queue.SimpleQueue) -> Callable:
+    def logic(e: dict) -> None:
+        root.put(Event("SETTINGS", e=e["currentTarget"]["id"]))
+
+    return logic
+
+
 # Root handler
 def root_handler(window: webview.window.Window) -> int:
     # Relevant data
@@ -313,16 +328,17 @@ def root_handler(window: webview.window.Window) -> int:
     con = sql.connect(DATABASE)  # Database connection
     ctemplate = window.dom.get_element("#ctemplate")  # Creator section template
     favourites = False  # Favourites mode toggle
+    settings = False  # Settings mode toggle
 
     # Thread queues
     root = queue.SimpleQueue()  # Main
     broker = queue.SimpleQueue()  # Spawn and kill lookup threads
     debounce = queue.SimpleQueue()  # Used for debouncing input
-    timer = queue.SimpleQueue()  # Used to communicate lookup timing
 
     # Input elements
     input_field = window.dom.get_element("#input_field")  # Primary input field
     fav_button = window.dom.get_element("#fav_button")  # Switch favourites button
+    settings_button = window.dom.get_element("#settings_button")  # Open settings menu
 
     # Thread handlers
     threading.Thread(  # Broker handler thread
@@ -338,6 +354,7 @@ def root_handler(window: webview.window.Window) -> int:
     window.events.closed += closed_handler(root)
     input_field.events.input += input_handler(root, debounce)
     fav_button.events.click += fav_handler(root)
+    settings_button.events.click += settings_handler(root)
 
     # Generate UI function
     def generate_ui(search: str) -> None:
@@ -359,7 +376,9 @@ def root_handler(window: webview.window.Window) -> int:
 
         for c in [
             creator for creator in csource if search.lower() in creator.name.lower()
-        ][:50]:
+        ][
+            :50
+        ]:  # 50 is the Kemono page size
             t = ctemplate.copy()
             del t.attributes["hidden"]
             t.children[0].attributes[
@@ -380,13 +399,24 @@ def root_handler(window: webview.window.Window) -> int:
             t.children[0].children[1].children[0].text = c.name
             t.children[0].children[1].children[1].text = c.service
 
+    # Generate settings
+    def generate_settings(settings: bool):
+        if settings:
+            for t in settings_button.parent.children[1:]:
+                del t.attributes["hidden"]
+        else:
+            for t in settings_button.parent.children[1:]:
+                t.attributes["hidden"] = True
+
     # Setup actions
     set_up_database(con)
     [
-        broker.put(f"{creator.service}-{creator.id}")
+        (broker.put(f"{creator.service}-{creator.id}"), toggle_searching(con, creator))
         for creator in get_database_creators(con)
         if creator.searching is True
     ]
+    for t in settings_button.parent.children[1:]:
+        t.events.click += settings_handler(root)
     generate_ui("")
 
     # Root handler loop
@@ -404,6 +434,17 @@ def root_handler(window: webview.window.Window) -> int:
             case toggle if toggle.type == "TOGGLE":
                 service, creator_id = toggle.event
                 broker.put(f"{service}-{creator_id}")
+            case toggle if toggle.type == "SETTINGS":
+                settings = not settings
+                generate_settings(settings)
+                if toggle.event is not None:
+                    match toggle.event:
+                        case "s30":
+                            set_timer(con, 30)
+                        case "m30":
+                            set_timer(con, 1800)
+                        case "h1":
+                            set_timer(con, 3600)
 
 
 # Setup and initialization
