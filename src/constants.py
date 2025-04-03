@@ -1,11 +1,13 @@
 from ast import literal_eval as d_from_s
+import os
 
 
 # Some constants
+PATH: str = os.path.dirname(os.path.realpath(__file__))
 NAME: str = "KC"
-UI: str = "ui/index.html"
-ICON: str = "ui/kemono.png"
-NOTIFICATION_ICON: str = "./src/ui/kemono.png"
+UI: str = PATH + "/ui/index.html"
+ICON: str = PATH + "/ui/kemono.png"
+NOTIFICATION_ICON: str = PATH + "/../src/ui/kemono.png"
 DATABASE: str = "data/kc.db"
 TIMER: int = 1800  # 1800 seconds => 30 minutes
 
