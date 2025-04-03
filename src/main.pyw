@@ -186,7 +186,9 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
         "KC",
         icon=Image.open(ICON),
         menu=pystray.Menu(
-            pystray.MenuItem("Clickable", tray_click_handler(root), default=True)
+            pystray.MenuItem(
+                "Open KC", tray_click_handler(root), default=True, visible=False
+            )
         ),
     )
     last_search = ""  # Last search holder
