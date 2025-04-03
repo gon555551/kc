@@ -6,10 +6,10 @@
 - Creator selection
 - Desktop notifications
 - GUI
+- Check-timing customization
 
 ## Upcoming features:
 - Settings menu
-    - Check-timing customization
     - Colour customization
 - File download
 - Taskbar icon
