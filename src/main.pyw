@@ -167,7 +167,7 @@ def root_handler(window: webview.window.Window, root: queue.SimpleQueue) -> int:
     fav_button = window.dom.get_element("#fav_button")  # Switch favourites button
     settings_button = window.dom.get_element("#settings_button")  # Open settings menu
 
-    # Relevant data
+    # Relevant data 
     clist = [
         Creator(creator["service"], creator["id"], creator["name"], 0, "{}")
         for creator in sorted(  # Sorted by most favourites, as per Kemono default
