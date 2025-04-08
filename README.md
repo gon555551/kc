@@ -1,4 +1,5 @@
-# KC, Kemono and Coomer crossplatform desktop notifications
+# KC, Kemono crossplatform desktop notifications  
+Kemono is a public archiver for Patreon, Discord, and other services.
 
 ## Current features:
 - Persistent memory
